@@ -4,9 +4,7 @@ import { Fragment } from "react";
 import Head from "next/head";
 const NewMeetupPage = () => {
   const router = useRouter();
-  const addMeetupHandler = async (enteredMeetupData) => {
-    console.log(enteredMeetupData);
-    // we have an internal api
+  const addMeetupHandler = async (enteredMeetupData) => {    
     const response = await fetch("/api/new-meetup", {
       method: "POST",
       body: JSON.stringify(enteredMeetupData),
@@ -14,8 +12,7 @@ const NewMeetupPage = () => {
         "Content-Type": "application/json",
       },
     });
-    const data = await response.json();
-    console.log(data);
+    const data = await response.json();    
     router.replace("/");
   };
   return (
