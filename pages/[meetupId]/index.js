@@ -1,11 +1,12 @@
 import MeetupDetail from "../../components/meetups/MeetupDetail";
-const MeetupDetails = () => {
+import { MongoClient, ObjectId } from "mongodb";
+const MeetupDetails = (props) => {
   return (
     <MeetupDetail
-      image="https://upload.wikimedia.org/wikipedia/commons/b/be/KeizersgrachtReguliersgrachtAmsterdam.jpg"
-      title="First Meetup"
-      address="Some street 5, some city"
-      description="This is a first meetup"
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
 };
@@ -22,15 +23,21 @@ const MeetupDetails = () => {
 // if doesn't know its id during build process
 
 export const getStaticPaths = async () => {
+  const client = await MongoClient.connect(
+    "mongodb+srv://hadis:0BThiAXozb65FOmo@mycluster.fd9u8.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray(); //only include the id but no other field values => only fetching id
+
+  client.close();
   return {
     // fallback key tells nextjs whether you paths array contains all supported all parameter values =>> fallback:false
     //or just some of them =>> fallback:true
-    fallback: false,
-    paths: [
-      { params: { meetupId: "m1" } },
-      //one object per version of this dynamic page
-      { params: { meetupId: "m2" } },
-    ],
+    fallback: true,
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
   };
 };
 
@@ -38,19 +45,25 @@ export const getStaticPaths = async () => {
 //and we are using getStaticProps =>>
 // we should use getStaticPaths
 export const getStaticProps = async (context) => {
-  // fetch data for single meetup
-  console.log(context);
   const meetupId = context.params.meetupId;
-  console.log(meetupId);
+  const client = await MongoClient.connect(
+    "mongodb+srv://hadis:0BThiAXozb65FOmo@mycluster.fd9u8.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: ObjectId(meetupId),
+  });
+
+  client.close();
   return {
     props: {
       meetupData: {
-        image:
-          "https://upload.wikimedia.org/wikipedia/commons/b/be/KeizersgrachtReguliersgrachtAmsterdam.jpg",
-        id: meetupId,
-        title: "First Meetup",
-        address: "Some street 5, some city",
-        description: "This is a first meetup",
+        id: selectedMeetup._id.toString(),
+        title: selectedMeetup.title,
+        image: selectedMeetup.image,
+        address: selectedMeetup.address,
+        description: selectedMeetup.description,
       },
     },
   };
