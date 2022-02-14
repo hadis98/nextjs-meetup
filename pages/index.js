@@ -1,23 +1,5 @@
 import MeetupList from "../components/meetups/MeetupList";
-// import { useEffect, useState } from "react";
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "first meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/b/be/KeizersgrachtReguliersgrachtAmsterdam.jpg",
-    address: "Some address 5,12345 some City",
-    description: "This is a first meetup",
-  },
-  {
-    id: "m2",
-    title: "second meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/b/be/KeizersgrachtReguliersgrachtAmsterdam.jpg",
-    address: "Some address 5,12345 some City",
-    description: "This is a second meetup",
-  },
-];
+import { MongoClient } from "mongodb";
 
 const HomePage = (props) => {
   /**
@@ -57,15 +39,29 @@ export async function getServerSideProps(context) {
 //can execute any code that run on server
 // fetch data from an API
 // always should return an object
-export const getStaticProps = async () => {
+export async function getStaticProps() {
+  const client = await MongoClient.connect(
+    "mongodb+srv://hadis:0BThiAXozb65FOmo@mycluster.fd9u8.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const meetups = await meetupsCollection.find().toArray(); //find all documents in the collection
+  console.log(meetups);
+  client.close();
+
   return {
     props: {
-      meetups: DUMMY_MEETUPS,
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      })),
     },
-    revalidate: 10,
+    revalidate: 1,
     // revalidate: 3600,
   };
-};
+}
 //10 = number of seconds nextjs will wait until it re-generates this page on the server after deployment for an incoming request (if  a request exists)
 // so the re-generated pages will be replaced with old ones
 // so you data is never older that 10 seconds
