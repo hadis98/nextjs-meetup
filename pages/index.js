@@ -1,6 +1,7 @@
+import { Fragment } from "react";
 import MeetupList from "../components/meetups/MeetupList";
 import { MongoClient } from "mongodb";
-
+import Head from "next/head";
 const HomePage = (props) => {
   /**
 const [loadedMeetups,setLoadedMeetups] = useState([]);
@@ -10,7 +11,18 @@ const [loadedMeetups,setLoadedMeetups] = useState([]);
     },[]);
 
    */
-  return <MeetupList meetups={props.meetups} />;
+  return (
+    <Fragment>
+      <Head>
+        <title>React Meetups</title>
+        <meta
+          name="description"
+          content="Browse a huge list of higly active React meetups"
+        />
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </Fragment>
+  );
 };
 
 // this function will always run on the server after deployment
